@@ -292,6 +292,29 @@ body {
 }
 .ad-btn:active { opacity: .7; transform: scale(.96); }
 
+/* 任务广告 */
+.task-ad-wrap {
+  margin-bottom: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.task-ad {
+  --adsgram-task-font-size: 14px;
+  --adsgram-task-icon-size: 36px;
+  --adsgram-task-icon-title-gap: 12px;
+  --adsgram-task-icon-border-radius: 10px;
+  --adsgram-task-button-width: 80px;
+  display: block;
+  padding: 12px;
+  background: rgba(128,128,128,.05);
+  border-radius: 14px;
+}
+
+.task-slot-reward { color: var(--tg-accent); font-weight: 600; font-size: 14px; }
+.task-slot-button { padding: 8px 16px; border-radius: 8px; background: var(--tg-link); color: #fff; font-weight: 700; font-size: 13px; display: inline-block; }
+.task-slot-done   { color: #2ecc71; font-weight: 700; font-size: 13px; }
+
 .boost-icon {
   width: 42px; height: 42px;
   border-radius: 12px;
@@ -479,6 +502,19 @@ body {
   <!-- ====== 商店面板 ====== -->
   <div class="panel" id="panelShop">
     <div class="panel-title">🚀 升级商店</div>
+
+    <!-- 任务广告 -->
+    <div class="task-ad-wrap">
+      <adsgram-task
+        data-block-id="task-1813"
+        data-debug="true"
+        class="task-ad">
+        <div slot="reward" class="task-slot-reward">🎁 完成任务赚金币</div>
+        <div slot="button" class="task-slot-button">去完成</div>
+        <div slot="done" class="task-slot-done">✅ 已领取</div>
+      </adsgram-task>
+    </div>
+
     <div id="shopList"></div>
   </div>
 
@@ -590,6 +626,20 @@ async function showRewardedAd() {
     }
   }
   adLoading = false;
+}
+
+// 任务广告事件
+const TASK_REWARD_COINS = 200;
+const taskAd = document.querySelector('.task-ad');
+if (taskAd) {
+  taskAd.addEventListener('reward', () => {
+    state.balance += TASK_REWARD_COINS;
+    state.totalEarned += TASK_REWARD_COINS;
+    saveState();
+    updateUI();
+    showToast(`🎁 任务完成！+${TASK_REWARD_COINS} 金币`);
+  });
+  console.log('[Ad] 任务广告已绑定');
 }
 
 // 初始化（非阻塞）

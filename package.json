@@ -1,0 +1,9 @@
+{
+  "name": "cointap-tg-game",
+  "version": "1.0.0",
+  "description": "CoinTap - Telegram Tap-to-Earn Mini Game",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  }
+}

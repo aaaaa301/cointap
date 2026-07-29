@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoinTap Bot 配置器</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
+  h2 { margin-bottom: 6px; }
+  .info { color: #888; font-size: 14px; margin-bottom: 16px; }
+  .step { padding: 16px; margin: 12px 0; border-radius: 12px; background: #f0f0f0; }
+  @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #eee; } .step { background: #2c2c2c; } .info { color: #aaa; } }
+  .step h3 { margin: 0 0 6px 0; font-size: 16px; }
+  .step p { margin: 4px 0; font-size: 13px; color: #888; }
+  a.btn { display: inline-block; padding: 10px 20px; margin-top: 8px; border-radius: 8px; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; }
+  .btn-orange { background: #f5a623; }
+  .btn-blue   { background: #3498db; }
+  .btn-green  { background: #2ecc71; }
+  .done { margin-top: 20px; padding: 16px; border-radius: 12px; background: #e8f5e9; color: #2e7d32; text-align: center; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .done { background: #1b5e20; color: #a5d6a7; } }
+</style>
+</head>
+<body>
+<h2>🪙 CoinTap Bot 一键配置</h2>
+<p class="info">Bot: @Gameapptv_bot — 按顺序点下面三个链接，每个在新标签页看到 "ok":true 就关掉</p>
+
+<div class="step">
+  <h3>① 设置菜单按钮</h3>
+  <p>用户打开 Bot 底部出现「Play」按钮</p>
+  <a class="btn btn-orange" target="_blank" id="link1">点我设置</a>
+</div>
+
+<div class="step">
+  <h3>② 设置命令列表</h3>
+  <p>输入 /start 或 /play 有快捷入口</p>
+  <a class="btn btn-blue" target="_blank" id="link2">点我设置</a>
+</div>
+
+<div class="step">
+  <h3>③ 设置 Bot 简介</h3>
+  <p>Bot 资料页有介绍文字</p>
+  <a class="btn btn-green" target="_blank" id="link3">点我设置</a>
+</div>
+
+<div class="done">
+  全部设好后 → <a href="https://t.me/Gameapptv_bot/app" target="_blank" style="color:inherit;font-weight:800;">打开游戏</a>
+</div>
+
+<script>
+const T = '8960386191:AAGmjPcQxBeT2IZLInSKlEZFPqRUm56MSOY';
+const U = 'https://2dcd1a73-222.1415008606.workers.dev/';
+
+document.getElementById('link1').href =
+  'https://api.telegram.org/bot'+T+'/setChatMenuButton?menu_button=' +
+  encodeURIComponent(JSON.stringify({type:'web_app',text:'Play',web_app:{url:U}}));
+
+document.getElementById('link2').href =
+  'https://api.telegram.org/bot'+T+'/setMyCommands?commands=' +
+  encodeURIComponent(JSON.stringify([
+    {command:'start', description:'Play game'},
+    {command:'play',  description:'Open game'}
+  ]));
+
+document.getElementById('link3').href =
+  'https://api.telegram.org/bot'+T+'/setMyDescription?description=' +
+  encodeURIComponent('CoinTap - Tap to earn! Tap the coin, earn points, buy upgrades, complete daily tasks!');
+</script>
+</body>
+</html>

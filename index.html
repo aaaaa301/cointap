@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CoinTap - Telegram Mini Game</title>
+<style>
+:root { color-scheme: light dark; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  height: 100%;
+  background: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  html { background: #1a1a1a; }
+}
+
+body {
+  min-height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* ========== Telegram 主题变量 ========== */
+:root {
+  --tg-bg: #ffffff;
+  --tg-text: #000000;
+  --tg-hint: #999999;
+  --tg-link: #2481cc;
+  --tg-button: #2481cc;
+  --tg-button-text: #ffffff;
+  --tg-secondary-bg: #f0f0f0;
+  --tg-section-bg: #ffffff;
+  --tg-section-header: #6d6d71;
+  --tg-accent: #f5a623;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tg-bg: #1a1a1a;
+    --tg-text: #ffffff;
+    --tg-hint: #7f7f7f;
+    --tg-link: #5eace0;
+    --tg-button: #5eace0;
+    --tg-button-text: #ffffff;
+    --tg-secondary-bg: #2c2c2c;
+    --tg-section-bg: #1e1e1e;
+    --tg-section-header: #8e8e93;
+    --tg-accent: #f5a623;
+  }
+}
+
+/* ========== 主容器 ========== */
+.app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100%;
+  background: var(--tg-bg);
+  color: var(--tg-text);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ========== 顶部栏 ========== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.balance-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coin-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #f7c948);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(245,166,35,.3);
+}
+
+.balance-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.level-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(128,128,128,.12);
+}
+
+/* ========== 能量条 ========== */
+.energy-section {
+  padding: 0 16px;
+  margin-bottom: 4px;
+}
+
+.energy-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--tg-hint);
+  margin-bottom: 4px;
+}
+
+.energy-bar-wrap {
+  height: 8px;
+  background: rgba(128,128,128,.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.energy-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f5a623, #f7c948);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.energy-low {
+  background: linear-gradient(90deg, #e74c3c, #f39c12) !important;
+}
+
+/* ========== 金币主区域 ========== */
+.coin-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.main-coin {
+  width: min(180px, 42vw);
+  height: min(180px, 42vw);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffeaa7, #f5a623 60%, #c78500);
+  box-shadow:
+    0 8px 32px rgba(245,166,35,.35),
+    inset 0 -4px 8px rgba(0,0,0,.15),
+    inset 0 4px 8px rgba(255,255,255,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  cursor: pointer;
+  transition: transform 0.10s ease;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.main-coin:active {
+  transform: scale(0.88) !important;
+  animation: none;
+}
+
+.main-coin.pulse {
+  animation: pulse .15s ease !important;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+/* 点击飘字 */
+.float-text {
+  position: absolute;
+  pointer-events: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--tg-accent);
+  animation: floatUp 1.2s ease-out forwards;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-120px) scale(1.6); }
+}
+
+/* 粒子 */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f5a623;
+  animation: particleFly .7s ease-out forwards;
+  z-index: 9;
+}
+
+@keyframes particleFly {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* ========== 底部导航 ========== */
+.bottom-nav {
+  display: flex;
+  border-top: 1px solid rgba(128,128,128,.15);
+  background: var(--tg-bg);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 12px;
+  cursor: pointer;
+  color: var(--tg-hint);
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: color .15s;
+}
+
+.nav-item.active { color: var(--tg-accent); }
+
+.nav-icon { font-size: 1.4rem; margin-bottom: 2px; }
+
+/* ========== 页面面板 ========== */
+.panel {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 16px;
+}
+
+.panel.active { display: block; }
+
+.panel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 16px 0 12px;
+}
+
+/* ========== 商店卡片 ========== */
+.boost-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: rgba(128,128,128,.05);
+  border-radius: 14px;
+  margin-bottom: 8px;
+}
+
+.boost-left { display: flex; align-items: center; gap: 12px; }
+
+.boost-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.boost-icon.multi  { background: rgba(52,152,219,.15); }
+.boost-icon.energy { background: rgba(46,204,113,.15); }
+.boost-icon.speed  { background: rgba(155,89,182,.15); }
+
+.boost-name  { font-weight: 700; font-size: 0.9rem; }
+.boost-desc  { font-size: 0.72rem; color: var(--tg-hint); margin-top: 2px; }
+.boost-level { font-size: 0.7rem; color: var(--tg-accent); margin-top: 2px; }
+
+.buy-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  background: var(--tg-accent);
+  color: #fff;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: opacity .15s;
+}
+
+.buy-btn:active { opacity: .7; }
+.buy-btn.maxed { background: rgba(128,128,128,.2); color: var(--tg-hint); cursor: default; }
+
+/* ========== 任务 Tab ========== */
+.task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: rgba(128,128,128,.05);
+  border-radius: 14px;
+  margin-bottom: 8px;
+}
+
+.task-left { display: flex; align-items: center; gap: 12px; }
+
+.task-reward {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--tg-accent);
+  white-space: nowrap;
+}
+
+.task-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: rgba(128,128,128,.1);
+}
+
+.task-name  { font-weight: 600; font-size: 0.85rem; }
+.task-desc  { font-size: 0.7rem; color: var(--tg-hint); margin-top: 2px; }
+
+.task-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  background: var(--tg-link);
+  color: #fff;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.task-btn:active { opacity: .7; }
+.task-btn.done { background: rgba(128,128,128,.2); color: var(--tg-hint); cursor: default; }
+
+/* ========== 每日签到 ========== */
+.daily-section {
+  background: rgba(128,128,128,.05);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.daily-title { font-weight: 700; font-size: 0.9rem; }
+
+.daily-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.daily-day {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: rgba(128,128,128,.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.daily-day .day-num   { font-weight: 600; font-size: 0.65rem; }
+.daily-day .day-reward { color: var(--tg-accent); font-weight: 700; font-size: 0.6rem; margin-top: 2px; }
+
+.daily-day.today     { border: 2px solid var(--tg-accent); }
+.daily-day.claimed   { background: rgba(46,204,113,.2); }
+.daily-day.claimed::after { content: '✓'; position: absolute; font-size: .6rem; }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 20px;
+  background: rgba(0,0,0,.8);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 200;
+  pointer-events: none;
+  animation: toastIn .3s ease, toastOut .3s ease 1.7s forwards;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toast { background: rgba(255,255,255,.15); }
+}
+
+@keyframes toastIn  { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ====== 顶部栏 ====== -->
+  <div class="top-bar">
+    <div class="balance-block">
+      <div class="coin-icon">🪙</div>
+      <span class="balance-text" id="balanceDisplay">0</span>
+    </div>
+    <div class="level-badge" id="levelBadge">Lv.1</div>
+  </div>
+
+  <!-- ====== 能量条 ====== -->
+  <div class="energy-section">
+    <div class="energy-header">
+      <span>⚡ 能量</span>
+      <span id="energyText">500 / 500</span>
+    </div>
+    <div class="energy-bar-wrap">
+      <div class="energy-bar-fill" id="energyBar" style="width:100%"></div>
+    </div>
+  </div>
+
+  <!-- ====== 游戏主区域 ====== -->
+  <div class="panel active" id="panelGame">
+    <div class="coin-area" id="coinArea">
+      <div class="main-coin" id="mainCoin">🪙</div>
+    </div>
+  </div>
+
+  <!-- ====== 商店面板 ====== -->
+  <div class="panel" id="panelShop">
+    <div class="panel-title">🚀 升级商店</div>
+    <div id="shopList"></div>
+  </div>
+
+  <!-- ====== 任务面板 ====== -->
+  <div class="panel" id="panelTasks">
+    <div class="panel-title">📋 每日任务</div>
+    <div class="daily-section" id="dailyCheckin"></div>
+    <div id="taskList"></div>
+  </div>
+
+  <!-- ====== 底部导航 ====== -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-panel="panelGame">
+      <span class="nav-icon">🪙</span> 游戏
+    </div>
+    <div class="nav-item" data-panel="panelShop">
+      <span class="nav-icon">🚀</span> 升级
+    </div>
+    <div class="nav-item" data-panel="panelTasks">
+      <span class="nav-icon">📋</span> 任务
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== Telegram WebApp 初始化 ====================
+const tg = window.Telegram?.WebApp;
+let isTelegram = !!tg;
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+
+  // 读取 Telegram 主题色
+  if (tg.themeParams) {
+    const root = document.documentElement.style;
+    if (tg.themeParams.bg_color)          root.setProperty('--tg-bg', tg.themeParams.bg_color);
+    if (tg.themeParams.text_color)        root.setProperty('--tg-text', tg.themeParams.text_color);
+    if (tg.themeParams.hint_color)        root.setProperty('--tg-hint', tg.themeParams.hint_color);
+    if (tg.themeParams.link_color)        root.setProperty('--tg-link', tg.themeParams.link_color);
+    if (tg.themeParams.button_color)      root.setProperty('--tg-button', tg.themeParams.button_color);
+    if (tg.themeParams.button_text_color) root.setProperty('--tg-button-text', tg.themeParams.button_text_color);
+    if (tg.themeParams.secondary_bg_color)root.setProperty('--tg-secondary-bg', tg.themeParams.secondary_bg_color);
+    if (tg.themeParams.section_bg_color)  root.setProperty('--tg-section-bg', tg.themeParams.section_bg_color);
+  }
+
+  // 主按钮（分享分数）
+  tg.MainButton.setText('📤 分享成绩').show().onClick(() => {
+    const data = JSON.stringify({
+      balance: state.balance,
+      level: state.level,
+      coinPerTap: getCoinPerTap(),
+      maxEnergy: getMaxEnergy()
+    });
+    tg.sendData(data);
+    tg.MainButton.hide();
+  });
+}
+
+// ==================== 游戏状态 ====================
+const DEFAULT_STATE = {
+  balance: 0,
+  totalEarned: 0,
+  energy: 500,
+  multitapLv: 1,
+  energyCapLv: 1,
+  rechargeLv: 1,
+  dailyStreak: 0,
+  lastDaily: '',
+  lastSave: 0,
+};
+
+let state = { ...DEFAULT_STATE };
+
+// ==================== 升级配置 ====================
+const BOOSTS = {
+  multitap: {
+    name: '连击加成',
+    desc: '每次点击获得更多金币',
+    icon: '👆',
+    iconClass: 'multi',
+    getCost: lv => Math.floor(200 * Math.pow(1.8, lv - 1)),
+    getEffect: lv => lv,
+    maxLv: 20,
+  },
+  energyCap: {
+    name: '能量上限',
+    desc: '提高最大能量值',
+    icon: '🔋',
+    iconClass: 'energy',
+    getCost: lv => Math.floor(300 * Math.pow(1.7, lv - 1)),
+    getEffect: lv => 500 + (lv - 1) * 250,
+    maxLv: 15,
+  },
+  recharge: {
+    name: '回复速度',
+    desc: '能量回复更快',
+    icon: '⚡',
+    iconClass: 'speed',
+    getCost: lv => Math.floor(400 * Math.pow(1.9, lv - 1)),
+    getEffect: lv => 1 + (lv - 1) * 0.5,
+    maxLv: 10,
+  },
+};
+
+function getCoinPerTap()  { return BOOSTS.multitap.getEffect(state.multitapLv); }
+function getMaxEnergy()    { return BOOSTS.energyCap.getEffect(state.energyCapLv); }
+function getRechargeRate() { return BOOSTS.recharge.getEffect(state.rechargeLv); }
+
+// ==================== 任务配置 ====================
+const TASKS = [
+  { id: 'tap50',   name: '点击 50 次',        desc: '今天累计点击 50 次',    target: 50,  reward: 300,  icon: '👆' },
+  { id: 'tap200',  name: '点击 200 次',       desc: '今天累计点击 200 次',   target: 200, reward: 800,  icon: '🔥' },
+  { id: 'earn1k',  name: '赚 1000 金币',      desc: '今天累计赚取 1000 金币', target: 1000,reward: 500,  icon: '💰' },
+  { id: 'earn5k',  name: '赚 5000 金币',      desc: '今天累计赚取 5000 金币', target: 5000,reward: 1500, icon: '💎' },
+  { id: 'buyBoost',name: '购买 1 次升级',      desc: '在商店购买任意升级',     target: 1,   reward: 200,  icon: '🚀' },
+];
+
+const DAILY_REWARDS = [50, 100, 200, 350, 500, 800, 1200];
+
+// ==================== 每日统计 ====================
+let dailyStats = { taps: 0, earned: 0, boostsBought: 0, date: '' };
+
+// ==================== 加载 & 保存 ====================
+function saveState() {
+  state.lastSave = Date.now();
+  const data = JSON.stringify(state);
+  localStorage.setItem('cointap_state', data);
+  if (tg?.CloudStorage) {
+    tg.CloudStorage.setItem('cointap_state', data);
+  }
+}
+
+function saveDaily() {
+  localStorage.setItem('cointap_daily', JSON.stringify(dailyStats));
+}
+
+function loadState() {
+  // 先从 localStorage 恢复
+  try {
+    const raw = localStorage.getItem('cointap_state');
+    if (raw) state = { ...DEFAULT_STATE, ...JSON.parse(raw) };
+  } catch (_) {}
+
+  try {
+    const raw = localStorage.getItem('cointap_daily');
+    if (raw) {
+      const ds = JSON.parse(raw);
+      if (ds.date === getToday()) dailyStats = ds;
+      else dailyStats = { taps: 0, earned: 0, boostsBought: 0, date: getToday() };
+    } else {
+      dailyStats = { taps: 0, earned: 0, boostsBought: 0, date: getToday() };
+    }
+  } catch (_) {
+    dailyStats = { taps: 0, earned: 0, boostsBought: 0, date: getToday() };
+  }
+
+  // Telegram CloudStorage 优先级更高
+  if (tg?.CloudStorage) {
+    tg.CloudStorage.getItem('cointap_state', (err, val) => {
+      if (!err && val) {
+        try { state = { ...DEFAULT_STATE, ...JSON.parse(val) }; } catch (_) {}
+        updateUI();
+      }
+    });
+  }
+}
+
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ==================== 计算玩家等级 ====================
+function calcLevel() {
+  const t = state.totalEarned;
+  if (t < 500) return 1;
+  if (t < 2000) return 2;
+  if (t < 6000) return 3;
+  if (t < 15000) return 4;
+  if (t < 35000) return 5;
+  if (t < 70000) return 6;
+  if (t < 130000) return 7;
+  if (t < 230000) return 8;
+  if (t < 400000) return 9;
+  return 10 + Math.floor((t - 400000) / 200000);
+}
+
+// ==================== 能量恢复 ====================
+let lastEnergyTick = Date.now();
+
+function tickEnergy() {
+  const now = Date.now();
+  const elapsed = (now - lastEnergyTick) / 1000;
+  lastEnergyTick = now;
+
+  const maxE = getMaxEnergy();
+  const rate = getRechargeRate();
+  state.energy = Math.min(maxE, state.energy + elapsed * rate);
+}
+
+// ==================== 点击金币 ====================
+const mainCoin = document.getElementById('mainCoin');
+const coinArea  = document.getElementById('coinArea');
+const energyBar = document.getElementById('energyBar');
+const energyText= document.getElementById('energyText');
+
+mainCoin.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  tickEnergy();
+
+  const perTap = getCoinPerTap();
+
+  if (state.energy < 1) {
+    showToast('⚡ 能量不够了，等一会儿再点吧');
+    return;
+  }
+
+  // 扣除能量 & 增加金币
+  state.energy = Math.max(0, state.energy - 1);
+  state.balance += perTap;
+  state.totalEarned += perTap;
+  dailyStats.taps++;
+  dailyStats.earned += perTap;
+
+  // 动画
+  mainCoin.classList.add('pulse');
+  setTimeout(() => mainCoin.classList.remove('pulse'), 150);
+
+  spawnFloatText(e, '+' + perTap);
+  spawnParticles(e);
+
+  // 触感反馈
+  if (tg?.HapticFeedback) {
+    tg.HapticFeedback.impactOccurred('light');
+  }
+
+  updateUI();
+  checkTasks();
+  saveState();
+  saveDaily();
+});
+
+// ==================== 飘字动画 ====================
+function spawnFloatText(e, text) {
+  const rect = coinArea.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const el = document.createElement('span');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  coinArea.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+function spawnParticles(e) {
+  const rect = coinArea.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    const angle = (Math.PI * 2 * i) / 6 + Math.random() * 0.5;
+    const dist = 30 + Math.random() * 40;
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    coinArea.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+// ==================== UI 更新 ====================
+function updateUI() {
+  // 余额
+  document.getElementById('balanceDisplay').textContent = formatNum(state.balance);
+
+  // 等级
+  const lv = calcLevel();
+  state.level = lv;
+  document.getElementById('levelBadge').textContent = 'Lv.' + lv;
+
+  // 能量条
+  const maxE = getMaxEnergy();
+  const pct = Math.max(0, Math.min(100, (state.energy / maxE) * 100));
+  energyBar.style.width = pct + '%';
+  energyText.textContent = Math.floor(state.energy) + ' / ' + maxE;
+  if (pct < 15) energyBar.classList.add('energy-low');
+  else energyBar.classList.remove('energy-low');
+
+  // 商店列表
+  renderShop();
+  // 每日签到
+  renderDaily();
+  // 任务
+  renderTasks();
+}
+
+function formatNum(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return Math.floor(n).toString();
+}
+
+// ==================== 商店渲染 ====================
+function renderShop() {
+  const container = document.getElementById('shopList');
+  const items = Object.entries(BOOSTS).map(([key, b]) => {
+    const lv = state[key + 'Lv'];
+    const maxed = lv >= b.maxLv;
+    const cost = b.getCost(lv + 1);
+    const effect = b.getEffect(lv);
+    const nextEffect = maxed ? '-' : b.getEffect(lv + 1);
+
+    return `
+      <div class="boost-card">
+        <div class="boost-left">
+          <div class="boost-icon ${b.iconClass}">${b.icon}</div>
+          <div>
+            <div class="boost-name">${b.name}</div>
+            <div class="boost-desc">${effect} → ${nextEffect}</div>
+            <div class="boost-level">Lv.${lv}${maxed ? ' (MAX)' : ''}</div>
+          </div>
+        </div>
+        <button class="buy-btn ${maxed ? 'maxed' : ''}"
+                onclick="buyBoost('${key}')"
+                ${maxed ? 'disabled' : ''}>
+          ${maxed ? '已满级' : cost + ' 💰'}
+        </button>
+      </div>`;
+  }).join('');
+  container.innerHTML = items || '<p style="color:var(--tg-hint);text-align:center;padding:20px;">加载中...</p>';
+}
+
+function buyBoost(key) {
+  tickEnergy();
+  const lv = state[key + 'Lv'];
+  const b = BOOSTS[key];
+  if (lv >= b.maxLv) return;
+  const cost = b.getCost(lv + 1);
+  if (state.balance < cost) {
+    showToast('💰 金币不够哦~');
+    return;
+  }
+
+  state.balance -= cost;
+  state[key + 'Lv']++;
+  dailyStats.boostsBought++;
+  saveState();
+  saveDaily();
+  updateUI();
+  checkTasks();
+  showToast(`✅ ${b.name} 升级到 Lv.${lv + 1}！`);
+}
+
+// ==================== 每日签到 ====================
+function renderDaily() {
+  const container = document.getElementById('dailyCheckin');
+  const today = getToday();
+  const claimed = state.lastDaily === today;
+  const days = [];
+
+  for (let i = 0; i < 7; i++) {
+    const isToday = state.dailyStreak === i;
+    const isClaimed = claimed && isToday;
+    days.push(`
+      <div class="daily-day ${isToday ? 'today' : ''} ${isClaimed ? 'claimed' : ''}"
+           ${isToday && !isClaimed ? `onclick="claimDaily()"` : ''}>
+        <span class="day-num">D${i + 1}</span>
+        <span class="day-reward">+${DAILY_REWARDS[i]}</span>
+      </div>`);
+  }
+
+  container.innerHTML = `
+    <div class="daily-header">
+      <span class="daily-title">🎁 每日签到</span>
+      <span style="font-size:0.72rem;color:var(--tg-hint);">第 ${state.dailyStreak + 1} 天</span>
+    </div>
+    <div class="daily-grid">${days.join('')}</div>
+    ${claimed ? '<p style="text-align:center;font-size:0.72rem;color:var(--tg-hint);margin-top:8px;">✅ 今日已签到</p>' : ''}
+  `;
+}
+
+function claimDaily() {
+  if (state.lastDaily === getToday()) return;
+  const reward = DAILY_REWARDS[state.dailyStreak];
+  state.balance += reward;
+  state.totalEarned += reward;
+  state.lastDaily = getToday();
+  state.dailyStreak = (state.dailyStreak + 1) % 7;
+  saveState();
+  updateUI();
+  showToast(`🎁 签到成功！+${reward} 金币`);
+}
+
+// ==================== 任务渲染 & 检测 ====================
+function renderTasks() {
+  const container = document.getElementById('taskList');
+  const completed = getCompletedTasks();
+  const items = TASKS.map(t => {
+    const done = completed.includes(t.id);
+    const pct = Math.min(100, Math.floor((getTaskProgress(t) / t.target) * 100));
+    return `
+      <div class="task-card">
+        <div class="task-left">
+          <div class="task-icon">${t.icon}</div>
+          <div>
+            <div class="task-name">${t.name}</div>
+            <div class="task-desc">${pct}% / ${t.reward} 💰</div>
+          </div>
+        </div>
+        <span class="task-reward">+${t.reward}</span>
+        <button class="task-btn ${done ? 'done' : ''}"
+                onclick="claimTask('${t.id}')"
+                ${done ? 'disabled' : ''}>
+          ${done ? '已领' : '领取'}
+        </button>
+      </div>`;
+  }).join('');
+  container.innerHTML = items;
+}
+
+function getTaskProgress(t) {
+  switch (t.id) {
+    case 'tap50':
+    case 'tap200': return dailyStats.taps;
+    case 'earn1k':
+    case 'earn5k': return dailyStats.earned;
+    case 'buyBoost': return dailyStats.boostsBought;
+    default: return 0;
+  }
+}
+
+function getCompletedTasks() {
+  try {
+    return JSON.parse(localStorage.getItem('cointap_tasks_done') || '[]');
+  } catch (_) { return []; }
+}
+
+function checkTasks() {
+  const completed = getCompletedTasks();
+  let changed = false;
+  TASKS.forEach(t => {
+    if (!completed.includes(t.id) && getTaskProgress(t) >= t.target) {
+      completed.push(t.id);
+      changed = true;
+    }
+  });
+  if (changed) {
+    localStorage.setItem('cointap_tasks_done', JSON.stringify(completed));
+    renderTasks();
+  }
+}
+
+function claimTask(taskId) {
+  const completed = getCompletedTasks();
+  if (completed.includes(taskId)) return;
+  const t = TASKS.find(x => x.id === taskId);
+  if (!t) return;
+  if (getTaskProgress(t) < t.target) {
+    showToast('⏳ 还没完成哦~');
+    return;
+  }
+  completed.push(taskId);
+  localStorage.setItem('cointap_tasks_done', JSON.stringify(completed));
+  state.balance += t.reward;
+  state.totalEarned += t.reward;
+  saveState();
+  updateUI();
+  showToast(`✅ 领取成功！+${t.reward} 金币`);
+}
+
+// ==================== 底部导航 ====================
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    tickEnergy();
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+    item.classList.add('active');
+    const panelId = item.dataset.panel;
+    document.getElementById(panelId).classList.add('active');
+    updateUI();
+  });
+});
+
+// ==================== Toast ====================
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', (e) => {
+    if (e.animationName === 'toastOut') el.remove();
+  });
+}
+
+// ==================== 主循环 ====================
+function gameLoop() {
+  tickEnergy();
+  updateUI();
+}
+
+// 每秒 tick 能量
+setInterval(gameLoop, 1000);
+
+// ==================== 启动 ====================
+try {
+  loadState();
+  updateUI();
+  console.log('🪙 CoinTap Telegram Mini Game Ready | TG:', isTelegram ? 'yes' : 'no');
+} catch (e) {
+  console.error('Init error:', e);
+  // 即使 JS 出错，HTML 结构已经渲染，用户至少能看到基本 UI
+}
+</script>
+
+</body>
+</html>

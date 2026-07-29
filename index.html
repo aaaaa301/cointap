@@ -552,9 +552,10 @@ function initAds() {
   try {
     adController = window.Adsgram.init({
       blockId: ADS_BLOCK_ID,
-      debug: false,
+      debug: true,
+      debugBannerType: 'RewardedVideo',
     });
-    console.log('[Ad] Adsgram 初始化成功');
+    console.log('[Ad] Adsgram 初始化成功 (debug模式)');
   } catch (e) {
     console.error('[Ad] 初始化失败:', e);
   }
@@ -580,10 +581,12 @@ async function showRewardedAd() {
       showToast(`🎁 获得 ${AD_REWARD_COINS} 金币！`);
     }
   } catch (result) {
-    if (result.error) {
-      showToast('📺 广告播放失败，请稍后再试');
+    const desc = result?.description || '';
+    if (result?.error) {
+      showToast('📺 广告失败: ' + desc);
+      console.error('[Ad] Error:', result);
     } else {
-      showToast('📺 广告已跳过');
+      showToast('📺 广告已跳过 (' + desc + ')');
     }
   }
   adLoading = false;

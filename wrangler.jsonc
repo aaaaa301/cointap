@@ -8,11 +8,6 @@
   },
   "assets": {
     "directory": ".",
-    "exclude": [
-      "node_modules/**",
-      ".wrangler/**",
-      ".git/**",
-      "~$*"
-    ]
+    "include": ["index.html"]
   }
 }

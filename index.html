@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CoinTap - Telegram Mini Game</title>
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <style>
 :root { color-scheme: light dark; }
 
@@ -276,6 +277,21 @@ body {
 
 .boost-left { display: flex; align-items: center; gap: 12px; }
 
+/* 广告按钮 */
+.ad-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-family: inherit;
+  transition: opacity .15s, transform .15s;
+}
+.ad-btn:active { opacity: .7; transform: scale(.96); }
+
 .boost-icon {
   width: 42px; height: 42px;
   border-radius: 12px;
@@ -455,6 +471,9 @@ body {
     <div class="coin-area" id="coinArea">
       <div class="main-coin" id="mainCoin">🪙</div>
     </div>
+    <div style="text-align:center; margin-top:8px;">
+      <button class="ad-btn" onclick="showRewardedAd()">📺 看广告 +100 💰</button>
+    </div>
   </div>
 
   <!-- ====== 商店面板 ====== -->
@@ -518,6 +537,60 @@ if (tg) {
     tg.MainButton.hide();
   });
 }
+
+// ==================== AdsGram 广告 ====================
+const ADS_BLOCK_ID = '40333'; // AdsGram 广告单元 ID
+const AD_REWARD_COINS = 100;          // 看完广告奖励金币数
+let adController = null;
+let adLoading = false;
+
+function initAds() {
+  if (!window.Adsgram) {
+    console.log('[Ad] Adsgram SDK 未加载');
+    return;
+  }
+  try {
+    adController = window.Adsgram.init({
+      blockId: ADS_BLOCK_ID,
+      debug: false,
+    });
+    console.log('[Ad] Adsgram 初始化成功');
+  } catch (e) {
+    console.error('[Ad] 初始化失败:', e);
+  }
+}
+
+async function showRewardedAd() {
+  if (!adController) {
+    showToast('📺 广告暂不可用');
+    return;
+  }
+  if (adLoading) {
+    showToast('⏳ 广告加载中...');
+    return;
+  }
+  adLoading = true;
+  try {
+    const result = await adController.show();
+    if (result.done) {
+      state.balance += AD_REWARD_COINS;
+      state.totalEarned += AD_REWARD_COINS;
+      saveState();
+      updateUI();
+      showToast(`🎁 获得 ${AD_REWARD_COINS} 金币！`);
+    }
+  } catch (result) {
+    if (result.error) {
+      showToast('📺 广告播放失败，请稍后再试');
+    } else {
+      showToast('📺 广告已跳过');
+    }
+  }
+  adLoading = false;
+}
+
+// 初始化（非阻塞）
+initAds();
 
 // ==================== 游戏状态 ====================
 const DEFAULT_STATE = {
